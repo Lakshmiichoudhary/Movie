@@ -1,7 +1,7 @@
-import { useState,useEffect,useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MovieList from './components/MovieList';
-import Form from './components/Form'
-import './App.css'
+import Form from './components/Form';
+import './App.css';
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -38,15 +38,39 @@ function App() {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  function addMovieHandler(movie) {
-    console.log(movie);
+  async function addMovieHandler(movie) {
+    const response = await fetch('https://react-http-6b4a6.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    console.log(data);
   }
 
+  async function deleteMovieHandler(movieId) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`https://your-delete-endpoint/${movieId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Delete failed!');
+      }
+      setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieId));
+    } catch (error) {
+      setError(error.message);
+    }
+    setIsLoading(false);
+  }
 
   let content = <p>Found no movies.</p>;
 
   if (movies.length > 0) {
-    content = <MovieList movies={movies} />;
+    content = <MovieList movies={movies} onDeleteMovie={deleteMovieHandler} />;
   }
 
   if (error) {
